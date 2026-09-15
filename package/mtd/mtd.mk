@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-MTD_VERSION = 2.2.0
+MTD_VERSION = 2.3.1
 MTD_SOURCE = mtd-utils-$(MTD_VERSION).tar.bz2
 MTD_SITE = https://infraroot.at/pub/mtd
 MTD_LICENSE = GPL-2.0
@@ -12,6 +12,7 @@ MTD_LICENSE_FILES = COPYING
 MTD_CPE_ID_VENDOR = mtd-utils_project
 MTD_CPE_ID_PRODUCT = mtd-utils
 MTD_INSTALL_STAGING = YES
+MTD_DEPENDENCIES = host-pkgconf
 
 MTD_LDFLAGS = $(TARGET_LDFLAGS)
 
@@ -20,17 +21,30 @@ MTD_DEPENDENCIES += libexecinfo
 MTD_LDFLAGS += -lexecinfo
 endif
 
+ifeq ($(BR2_PACKAGE_LZO),y)
+MTD_DEPENDENCIES += lzo
+MTD_CONF_OPTS += --with-lzo
+else
+MTD_CONF_OPTS += --without-lzo
+endif
+
+ifeq ($(BR2_PACKAGE_ZLIB),y)
+MTD_DEPENDENCIES += zlib
+MTD_CONF_OPTS += --with-zlib
+else
+MTD_CONF_OPTS += --without-zlib
+endif
+
 MTD_CONF_ENV += LDFLAGS="$(MTD_LDFLAGS)"
 
 ifeq ($(BR2_PACKAGE_MTD_JFFS_UTILS),y)
-MTD_DEPENDENCIES += zlib lzo host-pkgconf
 MTD_CONF_OPTS += --with-jffs
 else
 MTD_CONF_OPTS += --without-jffs
 endif
 
 ifeq ($(BR2_PACKAGE_MTD_UBIFS_UTILS),y)
-MTD_DEPENDENCIES += util-linux zlib lzo host-pkgconf
+MTD_DEPENDENCIES += util-linux
 MTD_CONF_OPTS += --with-ubifs
 # crypto needs linux/hash_info.h
 ifeq ($(BR2_TOOLCHAIN_HEADERS_AT_LEAST_4_12)$(BR2_PACKAGE_OPENSSL),yy)
@@ -56,9 +70,9 @@ MTD_CONF_OPTS += --disable-ubihealthd
 endif
 
 ifeq ($(BR2_PACKAGE_MTD_TESTS),y)
-MTD_CONF_OPTS += --enable-tests
+MTD_CONF_OPTS += --with-tests
 else
-MTD_CONF_OPTS += --disable-tests
+MTD_CONF_OPTS += --without-tests
 endif
 
 # If extended attributes are required, the acl package must
@@ -70,12 +84,19 @@ else
 MTD_CONF_OPTS += --without-xattr
 endif
 
-HOST_MTD_DEPENDENCIES = host-acl host-zlib host-lzo host-util-linux host-zstd
+HOST_MTD_DEPENDENCIES = \
+	host-acl \
+	host-lzo \
+	host-pkgconf \
+	host-util-linux \
+	host-zlib \
+	host-zstd
+
 HOST_MTD_CONF_OPTS = \
 	--with-jffs \
 	--with-ubifs \
 	--without-crypto \
-	--disable-tests
+	--without-tests
 
 MKFS_JFFS2 = $(HOST_DIR)/sbin/mkfs.jffs2
 SUMTOOL = $(HOST_DIR)/sbin/sumtool
@@ -132,6 +153,7 @@ MTD_TARGETS_$(BR2_PACKAGE_MTD_NANDBITERRS)	+= nandbiterrs
 MTD_TARGETS_$(BR2_PACKAGE_MTD_NANDPAGETEST)	+= nandpagetest
 MTD_TARGETS_$(BR2_PACKAGE_MTD_NANDSUBPAGETEST)	+= nandsubpagetest
 MTD_TARGETS_$(BR2_PACKAGE_MTD_NANDFLIPBITS)	+= nandflipbits
+MTD_TARGETS_$(BR2_PACKAGE_MTD_FSCKUBIFS)	+= fsck.ubifs
 
 define MTD_INSTALL_TARGET_CMDS
 	$(foreach f,$(MTD_TARGETS_y), \

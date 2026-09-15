@@ -1,5 +1,4 @@
-# From https://www.python.org/downloads/release/python-3123/
-md5  d68f25193eec491eb54bc2ea664a05bd  Python-3.12.4.tar.xz
+# From https://www.python.org/downloads/release/python-3147/
+sha256  3b48dac8fb59f62eaa67ac83c1eb12bda1b7a08406dd286e252c11a66be27f81  Python-3.14.7.tar.xz
 # Locally computed
-sha256  f6d419a6d8743ab26700801b4908d26d97e8b986e14f95de31b32de2b0e79554  Python-3.12.4.tar.xz
-sha256  3b2f81fe21d181c499c59a256c8e1968455d6689d269aa85373bfb6af41da3bf  LICENSE
+sha256  b0e25a78cffb43f4d92de8b61ccfa1f1f98ecbc22330b54b5251e7b6ba010231  LICENSE

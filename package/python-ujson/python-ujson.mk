@@ -4,11 +4,11 @@
 #
 ################################################################################
 
-PYTHON_UJSON_VERSION = 5.7.0
+PYTHON_UJSON_VERSION = 5.12.0
 PYTHON_UJSON_SOURCE = ujson-$(PYTHON_UJSON_VERSION).tar.gz
-PYTHON_UJSON_SITE = https://files.pythonhosted.org/packages/43/1a/b0a027144aa5c8f4ea654f4afdd634578b450807bb70b9f8bad00d6f6d3c
+PYTHON_UJSON_SITE = https://files.pythonhosted.org/packages/cb/3e/c35530c5ffc25b71c59ae0cd7b8f99df37313daa162ce1e2f7925f7c2877
 PYTHON_UJSON_SETUP_TYPE = setuptools
-PYTHON_UJSON_LICENSE = BSD-3-Clause
+PYTHON_UJSON_LICENSE = BSD-3-Clause, TCL
 PYTHON_UJSON_LICENSE_FILES = LICENSE.txt
 PYTHON_UJSON_DEPENDENCIES = host-python-setuptools-scm double-conversion
 PYTHON_UJSON_ENV = \

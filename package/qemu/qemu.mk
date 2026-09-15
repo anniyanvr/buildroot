@@ -6,7 +6,7 @@
 
 # When updating the version, check whether the list of supported targets
 # needs to be updated.
-QEMU_VERSION = 9.0.0
+QEMU_VERSION = 11.0.0
 QEMU_SOURCE = qemu-$(QEMU_VERSION).tar.xz
 QEMU_SITE = https://download.qemu.org
 QEMU_SELINUX_MODULES = qemu virt
@@ -16,12 +16,6 @@ QEMU_LICENSE_FILES = COPYING COPYING.LIB
 #       the non-(L)GPL license texts are specified in the affected
 #       individual source files.
 QEMU_CPE_ID_VENDOR = qemu
-
-# Need to ignore the following CVEs because the CPE database does
-# not have an entry for the 8.1.1 version yet.
-QEMU_IGNORE_CVES += CVE-2023-4135
-QEMU_IGNORE_CVES += CVE-2023-3354
-QEMU_IGNORE_CVES += CVE-2023-3180
 
 #-------------------------------------------------------------
 
@@ -34,6 +28,8 @@ QEMU_DEPENDENCIES = \
 	host-pkgconf \
 	host-python3 \
 	host-python-distlib \
+	host-python-setuptools \
+	host-python-wheel \
 	libglib2 \
 	zlib
 
@@ -54,22 +50,32 @@ QEMU_VARS = LIBTOOL=$(HOST_DIR)/bin/libtool
 ifeq ($(BR2_PACKAGE_QEMU_SYSTEM),y)
 QEMU_DEPENDENCIES += pixman
 QEMU_OPTS += --enable-system
+
+ifeq ($(BR2_PACKAGE_QEMU_SYSTEM_KVM), y)
+QEMU_OPTS += --enable-kvm
+else
+QEMU_OPTS += --disable-kvm
+endif
+
+ifeq ($(BR2_PACKAGE_QEMU_SYSTEM_TCG), y)
+QEMU_OPTS += --enable-tcg
+else
+QEMU_OPTS += --disable-tcg
+endif
+
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_AARCH64) += aarch64-softmmu
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_ALPHA) += alpha-softmmu
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_ARM) += arm-softmmu
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_AVR) += avr-softmmu
-QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_CRIS) += cris-softmmu
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_HPPA) += hppa-softmmu
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_I386) += i386-softmmu
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_LOONGARCH64) += loongarch64-softmmu
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_M68K) += m68k-softmmu
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_MICROBLAZE) += microblaze-softmmu
-QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_MICROBLAZEEL) += microblazeel-softmmu
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_MIPS) += mips-softmmu
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_MIPS64) += mips64-softmmu
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_MIPS64EL) += mips64el-softmmu
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_MIPSEL) += mipsel-softmmu
-QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_NIOS2) += nios2-softmmu
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_OR1K) += or1k-softmmu
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_PPC) += ppc-softmmu
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_PPC64) += ppc64-softmmu
@@ -96,21 +102,18 @@ QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_AARCH64_BE) += aarch64_be-linux-user
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_ALPHA) += alpha-linux-user
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_ARM) += arm-linux-user
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_ARMEB) += armeb-linux-user
-QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_CRIS) += cris-linux-user
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_HEXAGON) += hexagon-linux-user
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_HPPA) += hppa-linux-user
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_I386) += i386-linux-user
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_LOONGARCH64) += loongarch64-linux-user
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_M68K) += m68k-linux-user
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_MICROBLAZE) += microblaze-linux-user
-QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_MICROBLAZEEL) += microblazeel-linux-user
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_MIPS) += mips-linux-user
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_MIPS64) += mips64-linux-user
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_MIPS64EL) += mips64el-linux-user
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_MIPSEL) += mipsel-linux-user
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_MIPSN32) += mipsn32-linux-user
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_MIPSN32EL) += mipsn32el-linux-user
-QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_NIOS2) += nios2-linux-user
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_OR1K) += or1k-linux-user
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_PPC) += ppc-linux-user
 QEMU_TARGET_LIST_$(BR2_PACKAGE_QEMU_TARGET_PPC64) += ppc64-linux-user
@@ -269,6 +272,20 @@ else
 QEMU_OPTS += --disable-usb-redir
 endif
 
+ifeq ($(BR2_PACKAGE_QEMU_OPENGL),y)
+QEMU_OPTS += --enable-opengl
+QEMU_DEPENDENCIES += libepoxy
+else
+QEMU_OPTS += --disable-opengl
+endif
+
+ifeq ($(BR2_PACKAGE_QEMU_VIRGLRENDERER),y)
+QEMU_OPTS += --enable-virglrenderer
+QEMU_DEPENDENCIES += virglrenderer
+else
+QEMU_OPTS += --disable-virglrenderer
+endif
+
 ifeq ($(BR2_STATIC_LIBS),y)
 QEMU_OPTS += --static
 endif
@@ -277,6 +294,13 @@ ifeq ($(BR2_PACKAGE_QEMU_BLOBS),y)
 QEMU_OPTS += --enable-install-blobs
 else
 QEMU_OPTS += --disable-install-blobs
+endif
+
+ifeq ($(BR2_PACKAGE_ZSTD),y)
+QEMU_OPTS += --enable-zstd
+QEMU_DEPENDENCIES += zstd
+else
+QEMU_OPTS += --disable-zstd
 endif
 
 # Override CPP, as it expects to be able to call it like it'd
@@ -296,6 +320,7 @@ define QEMU_CONFIGURE_CMDS
 			--python=$(HOST_DIR)/bin/python3 \
 			--ninja=$(HOST_DIR)/bin/ninja \
 			--disable-alsa \
+			--disable-asan \
 			--disable-bpf \
 			--disable-brlapi \
 			--disable-bsd-user \
@@ -307,6 +332,7 @@ define QEMU_CONFIGURE_CMDS
 			--disable-curses \
 			--disable-dbus-display \
 			--disable-docs \
+			--disable-download \
 			--disable-dsound \
 			--disable-hvf \
 			--disable-jack \
@@ -317,15 +343,14 @@ define QEMU_CONFIGURE_CMDS
 			--disable-membarrier \
 			--disable-mpath \
 			--disable-netmap \
-			--disable-opengl \
 			--disable-oss \
 			--disable-pa \
 			--disable-plugins \
 			--disable-rbd \
-			--disable-sanitizers \
 			--disable-selinux \
 			--disable-sparse \
 			--disable-strip \
+			--disable-ubsan \
 			--disable-vde \
 			--disable-vhost-crypto \
 			--disable-vhost-user-blk-server \
@@ -333,9 +358,7 @@ define QEMU_CONFIGURE_CMDS
 			--disable-whpx \
 			--disable-xen \
 			--enable-attr \
-			--enable-kvm \
 			--enable-vhost-net \
-			--disable-download \
 			--disable-hexagon-idef-parser \
 			$(QEMU_OPTS)
 endef
@@ -362,6 +385,8 @@ HOST_QEMU_DEPENDENCIES = \
 	host-pkgconf \
 	host-python3 \
 	host-python-distlib \
+	host-python-setuptools \
+	host-python-wheel \
 	host-slirp \
 	host-zlib
 
@@ -369,17 +394,18 @@ HOST_QEMU_DEPENDENCIES = \
 #       -------         ----
 #       arm             arm
 #       armeb           armeb
+#       hppa            hppa
 #       i486            i386
 #       i586            i386
 #       i686            i386
 #       x86_64          x86_64
 #       m68k            m68k
 #       microblaze      microblaze
+#       microblazeel    microblaze
 #       mips            mips
 #       mipsel          mipsel
 #       mips64          mips64
 #       mips64el        mips64el
-#       nios2           nios2
 #       or1k            or1k
 #       powerpc         ppc
 #       powerpc64       ppc64
@@ -405,6 +431,10 @@ HOST_QEMU_ARCH = i386
 endif
 ifeq ($(HOST_QEMU_ARCH),i686)
 HOST_QEMU_ARCH = i386
+endif
+ifeq ($(HOST_QEMU_ARCH),microblazeel)
+# since v11.0.0, microblazeel emulation is provided by the microblaze target
+HOST_QEMU_ARCH = microblaze
 endif
 ifeq ($(HOST_QEMU_ARCH),powerpc)
 HOST_QEMU_ARCH = ppc
@@ -468,6 +498,13 @@ else
 HOST_QEMU_OPTS += --disable-libusb
 endif
 
+ifeq ($(BR2_PACKAGE_HOST_ZSTD),y)
+HOST_QEMU_OPTS += --enable-zstd
+HOST_QEMU_DEPENDENCIES += host-zstd
+else
+HOST_QEMU_OPTS += --disable-zstd
+endif
+
 # Override CPP, as it expects to be able to call it like it'd
 # call the compiler.
 define HOST_QEMU_CONFIGURE_CMDS
@@ -491,6 +528,7 @@ define HOST_QEMU_CONFIGURE_CMDS
 		--disable-curl \
 		--disable-dbus-display \
 		--disable-docs \
+		--disable-download \
 		--disable-dsound \
 		--disable-jack \
 		--disable-libssh \

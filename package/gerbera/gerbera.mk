@@ -4,12 +4,15 @@
 #
 ################################################################################
 
-GERBERA_VERSION = 1.12.1
+GERBERA_VERSION = 3.2.1
 GERBERA_SITE = $(call github,gerbera,gerbera,v$(GERBERA_VERSION))
 GERBERA_LICENSE = GPL-2.0
 GERBERA_LICENSE_FILES = LICENSE.md
 GERBERA_DEPENDENCIES = \
+	cxxopts \
 	fmt \
+	icu \
+	jsoncpp \
 	host-pkgconf \
 	pugixml \
 	spdlog \
@@ -80,13 +83,20 @@ else
 GERBERA_CONF_OPTS += -DWITH_MATROSKA=OFF
 endif
 
-# Either libupnp or libnpupnp are guranteed to be enabled
+# Either libupnp or libnpupnp are guaranteed to be enabled
 ifeq ($(BR2_PACKAGE_LIBNPUPNP),y)
 GERBERA_DEPENDENCIES += libnpupnp
 GERBERA_CONF_OPTS += -DWITH_NPUPNP=ON
 else
 GERBERA_DEPENDENCIES += libupnp
 GERBERA_CONF_OPTS += -DWITH_NPUPNP=OFF
+endif
+
+ifeq ($(BR2_PACKAGE_LIBPQXX),y)
+GERBERA_DEPENDENCIES += libpqxx
+GERBERA_CONF_OPTS += -DWITH_PGSQL=ON
+else
+GERBERA_CONF_OPTS += -DWITH_PGSQL=OFF
 endif
 
 ifeq ($(BR2_PACKAGE_MARIADB),y)
@@ -108,6 +118,13 @@ GERBERA_DEPENDENCIES += taglib
 GERBERA_CONF_OPTS += -DWITH_TAGLIB=ON
 else
 GERBERA_CONF_OPTS += -DWITH_TAGLIB=OFF
+endif
+
+ifeq ($(BR2_PACKAGE_LIBZIPPP),y)
+GERBERA_DEPENDENCIES += libzip libzippp
+GERBERA_CONF_OPTS += -DWITH_ZIP=ON
+else
+GERBERA_CONF_OPTS += -DWITH_ZIP=OFF
 endif
 
 # gerbera does not provide a default configuration file, it can be

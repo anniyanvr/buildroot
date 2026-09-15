@@ -6,7 +6,7 @@
 
 # Be careful when bumping versions.
 # Dependency on kernel header versions may change.
-LIBGPIOD_VERSION = 1.6.4
+LIBGPIOD_VERSION = 1.6.5
 LIBGPIOD_SOURCE = libgpiod-$(LIBGPIOD_VERSION).tar.xz
 LIBGPIOD_SITE = https://www.kernel.org/pub/software/libs/libgpiod
 LIBGPIOD_LICENSE = LGPL-2.1+
@@ -23,6 +23,10 @@ LIBGPIOD_CONF_OPTS += --enable-tools
 else
 LIBGPIOD_CONF_OPTS += --disable-tools
 endif
+
+define LIBGPIOD_LINUX_CONFIG_FIXUPS
+	$(call KCONFIG_ENABLE_OPT,CONFIG_GPIO_CDEV_V1)
+endef
 
 ifeq ($(BR2_INSTALL_LIBSTDCPP),y)
 LIBGPIOD_CONF_OPTS += --enable-bindings-cxx

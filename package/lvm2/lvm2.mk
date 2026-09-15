@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-LVM2_VERSION = 2.03.23
+LVM2_VERSION = 2.03.31
 LVM2_SOURCE = LVM2.$(LVM2_VERSION).tgz
 LVM2_SITE = https://sourceware.org/ftp/lvm2
 LVM2_INSTALL_STAGING = YES
@@ -46,6 +46,15 @@ LVM2_CONF_OPTS += --enable-selinux
 LVM2_DEPENDENCIES += libselinux
 else
 LVM2_CONF_OPTS += --disable-selinux
+endif
+
+ifeq ($(BR2_STATIC_LIBS),y)
+# configure: error: --enable-cmdlib requires dynamic linking.
+LVM2_CONF_OPTS += --disable-cmdlib
+# configure: error: --enable-dmeventd requires --enable-cmdlib to be used as well
+LVM2_CONF_OPTS += --disable-dmeventd
+# install static version of the devmapper library
+LVM2_CONF_OPTS += --enable-static_link
 endif
 
 ifeq ($(BR2_PACKAGE_LVM2_STANDARD_INSTALL),y)

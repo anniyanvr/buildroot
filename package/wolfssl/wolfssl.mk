@@ -4,11 +4,11 @@
 #
 ################################################################################
 
-WOLFSSL_VERSION = 5.7.0
+WOLFSSL_VERSION = 5.9.2
 WOLFSSL_SITE = $(call github,wolfSSL,wolfssl,v$(WOLFSSL_VERSION)-stable)
 WOLFSSL_INSTALL_STAGING = YES
 
-WOLFSSL_LICENSE = GPL-2.0+
+WOLFSSL_LICENSE = GPL-3.0+
 WOLFSSL_LICENSE_FILES = COPYING LICENSING
 WOLFSSL_CPE_ID_VENDOR = wolfssl
 WOLFSSL_CONFIG_SCRIPTS = wolfssl-config
@@ -16,7 +16,10 @@ WOLFSSL_CONFIG_SCRIPTS = wolfssl-config
 WOLFSSL_AUTORECONF = YES
 WOLFSSL_DEPENDENCIES = host-pkgconf
 
-WOLFSSL_CONF_OPTS = --disable-examples --disable-crypttests
+WOLFSSL_CONF_OPTS = \
+	--disable-examples \
+	--disable-crypttests \
+	--disable-option-checking
 
 ifeq ($(BR2_PACKAGE_WOLFSSL_ALL),y)
 WOLFSSL_CONF_OPTS += --enable-all

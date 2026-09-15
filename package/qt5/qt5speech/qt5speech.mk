@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-QT5SPEECH_VERSION = 214dcefc7c408e11a3e9fe9d221e4a384e2eaca1
+QT5SPEECH_VERSION = aa2376f9b1302222edcd16b4641bbd7004318c00
 QT5SPEECH_SITE = $(QT5_SITE)/qtspeech/-/archive/$(QT5SPEECH_VERSION)
 QT5SPEECH_SOURCE = qtspeech-$(QT5SPEECH_VERSION).tar.bz2
 QT5SPEECH_INSTALL_STAGING = YES

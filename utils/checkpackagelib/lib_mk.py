@@ -6,6 +6,7 @@
 
 import os
 import re
+from pathlib import Path
 
 from checkpackagelib.base import _CheckFunction
 from checkpackagelib.lib import ConsecutiveEmptyLines  # noqa: F401
@@ -47,6 +48,18 @@ class Ifdef(_CheckFunction):
             return ["{}:{}: use ifneq ($(SYMBOL),y) instead of ifndef SYMBOL"
                     .format(self.filename, lineno),
                     text]
+
+
+def get_package_prefix_from_filename(filename):
+    """Return a tuple (pkgname, PKGNAME) with the package name derived from the file name"""
+    # Double splitext to support .mk.in
+    package = os.path.splitext(os.path.splitext(os.path.basename(filename))[0])[0]
+    # linux tools do not use LINUX_TOOL_ prefix for variables
+    package = package.replace("linux-tool-", "")
+    # linux extensions do not use LINUX_EXT_ prefix for variables
+    package = package.replace("linux-ext-", "")
+    package_upper = package.replace("-", "_").upper()
+    return package, package_upper
 
 
 class Indent(_CheckFunction):
@@ -103,6 +116,47 @@ class Indent(_CheckFunction):
                 return ["{}:{}: unexpected indent with tabs"
                         .format(self.filename, lineno),
                         text]
+
+
+class MissingCVEPatch(_CheckFunction):
+    PATCH_COMMENT = re.compile(r"^#\s*(\S+\.patch)\s*$")
+    IGNORE_CVES = re.compile(r"^[A-Z0-9_]+_IGNORE_CVES\s*\+?=")
+    CVE_TAG_IN_PATCH = re.compile(r"^CVE: *CVE-\d+-\d+$")
+
+    def before(self):
+        self.pending_patches = []
+        self.package_dir = Path(self.filename).parent
+
+    def check_patch_files(self):
+        for patch_lineno, patch_name, patch_text in self.pending_patches:
+            patch_file = self.package_dir / patch_name
+            self.pending_patch = None
+
+            if not patch_file.is_file():
+                return ["{}:{}: patch file '{}' mentioned for ignored CVEs is missing"
+                        .format(self.filename, patch_lineno, patch_name),
+                        patch_text]
+
+            if not any(map(self.CVE_TAG_IN_PATCH.match, patch_file.open())):
+                return ["{}: patch file '{}' is missing 'CVE:' tag"
+                        .format(self.filename, patch_name),
+                        patch_text]
+
+    def check_line(self, lineno, text):
+        m = self.PATCH_COMMENT.match(text.rstrip())
+        if m:
+            self.pending_patches.append((lineno, m.group(1), text))
+            return
+
+        # other comments do not break the association between the patch
+        # comment and the following _IGNORE_CVES assignment
+        if text.lstrip().startswith("#"):
+            return
+
+        if self.IGNORE_CVES.search(text):
+            return self.check_patch_files()
+
+        self.pending_patches = []
 
 
 class OverriddenVariable(_CheckFunction):
@@ -207,12 +261,10 @@ class RemoveDefaultPackageSourceVariable(_CheckFunction):
     packages_that_may_contain_default_source = ["binutils", "gcc", "gdb"]
 
     def before(self):
-        package, _ = os.path.splitext(os.path.basename(self.filename))
-        package_upper = package.replace("-", "_").upper()
-        self.package = package
+        self.package, package_upper = get_package_prefix_from_filename(self.filename)
         self.FIND_SOURCE = re.compile(
             r"^{}_SOURCE\s*=\s*{}-\$\({}_VERSION\)\.tar\.gz"
-            .format(package_upper, package, package_upper))
+            .format(package_upper, self.package, package_upper))
 
     def check_line(self, lineno, text):
         if self.FIND_SOURCE.search(text):
@@ -282,16 +334,10 @@ class TypoInPackageVariable(_CheckFunction):
     VARIABLE = re.compile(r"^(define\s+)?([A-Z0-9_]+_[A-Z0-9_]+)")
 
     def before(self):
-        package, _ = os.path.splitext(os.path.basename(self.filename))
-        package = package.replace("-", "_").upper()
-        # linux tools do not use LINUX_TOOL_ prefix for variables
-        package = package.replace("LINUX_TOOL_", "")
-        # linux extensions do not use LINUX_EXT_ prefix for variables
-        package = package.replace("LINUX_EXT_", "")
-        self.package = package
-        self.REGEX = re.compile(r"(HOST_|ROOTFS_)?({}_[A-Z0-9_]+)".format(package))
+        _, self.package = get_package_prefix_from_filename(self.filename)
+        self.REGEX = re.compile(r"(HOST_|ROOTFS_)?({}_[A-Z0-9_]+)".format(self.package))
         self.FIND_VIRTUAL = re.compile(
-            r"^{}_PROVIDES\s*(\+|)=\s*(.*)".format(package))
+            r"^{}_PROVIDES\s*(\+|)=\s*(.*)".format(self.package))
         self.virtual = []
 
     def check_line(self, lineno, text):
@@ -312,9 +358,9 @@ class TypoInPackageVariable(_CheckFunction):
 
         if self.ALLOWED.match(variable):
             return
-        if self.REGEX.search(text) is None:
-            return ["{}:{}: possible typo: {} -> *{}*"
-                    .format(self.filename, lineno, variable, self.package),
+        if self.REGEX.search(variable) is None:
+            return ["{}:{}: possible typo, variable not properly prefixed: {} -> *{}_XXXX* ({}#_tips_and_tricks)"
+                    .format(self.filename, lineno, variable, self.package, self.url_to_manual),
                     text]
 
 
@@ -324,7 +370,7 @@ class UselessFlag(_CheckFunction):
         r"_LIBTOOL_PATCH\s*=\s*YES"])))
     DEFAULT_GENERIC_FLAG = re.compile(r"^.*{}".format("|".join([
         r"_INSTALL_IMAGES\s*=\s*NO",
-        r"_INSTALL_REDISTRIBUTE\s*=\s*YES",
+        r"_REDISTRIBUTE\s*=\s*YES",
         r"_INSTALL_STAGING\s*=\s*NO",
         r"_INSTALL_TARGET\s*=\s*YES"])))
     END_CONDITIONAL = re.compile(r"^\s*({})".format("|".join(end_conditional)))

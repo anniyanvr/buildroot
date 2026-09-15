@@ -4,11 +4,13 @@
 #
 ################################################################################
 
-GST1_PLUGINS_GOOD_VERSION = 1.22.9
+GST1_PLUGINS_GOOD_VERSION = 1.24.13
 GST1_PLUGINS_GOOD_SOURCE = gst-plugins-good-$(GST1_PLUGINS_GOOD_VERSION).tar.xz
 GST1_PLUGINS_GOOD_SITE = https://gstreamer.freedesktop.org/src/gst-plugins-good
 GST1_PLUGINS_GOOD_LICENSE_FILES = COPYING
 GST1_PLUGINS_GOOD_LICENSE = LGPL-2.1+
+GST1_PLUGINS_GOOD_CPE_ID_VENDOR = freedesktop
+GST1_PLUGINS_GOOD_CPE_ID_PRODUCT = gst-plugins-good
 
 GST1_PLUGINS_GOOD_CFLAGS = $(TARGET_CFLAGS) -std=gnu99
 GST1_PLUGINS_GOOD_LDFLAGS = $(TARGET_LDFLAGS) $(TARGET_NLS_LIBS)
@@ -27,6 +29,10 @@ GST1_PLUGINS_GOOD_CONF_OPTS = \
 	-Dosxvideo=disabled \
 	-Daalib=disabled \
 	-Dlibcaca=disabled \
+	-Damrnb=disabled \
+	-Damrwbdec=disabled \
+	-Dsoup=disabled \
+	-Dximagesrc-navigation=disabled \
 	-Ddoc=disabled
 
 # Options which require currently unpackaged libraries

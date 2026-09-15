@@ -4,12 +4,11 @@
 #
 ################################################################################
 
-PYTHON_BLEAK_VERSION = 0.21.1
+PYTHON_BLEAK_VERSION = 3.0.1
 PYTHON_BLEAK_SOURCE = bleak-$(PYTHON_BLEAK_VERSION).tar.gz
-PYTHON_BLEAK_SITE = https://files.pythonhosted.org/packages/6a/c0/3aca655fa43b8ff5340d99fac4e67061f53f42f092fc847bdd0559d67846
-PYTHON_BLEAK_SETUP_TYPE = pep517
+PYTHON_BLEAK_SITE = https://files.pythonhosted.org/packages/87/9f/dd19d92309e4a37823210827f0f42460e69603254309b99499622b511294
+PYTHON_BLEAK_SETUP_TYPE = poetry
 PYTHON_BLEAK_LICENSE = MIT
 PYTHON_BLEAK_LICENSE_FILES = LICENSE
-PYTHON_BLEAK_DEPENDENCIES = host-python-poetry-core
 
 $(eval $(python-package))

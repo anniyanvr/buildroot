@@ -7,13 +7,6 @@
 GDB_VERSION = $(call qstrip,$(BR2_GDB_VERSION))
 GDB_SITE = $(BR2_GNU_MIRROR)/gdb
 GDB_SOURCE = gdb-$(GDB_VERSION).tar.xz
-
-ifeq ($(GDB_VERSION),arc-2023.09-release)
-GDB_SITE = $(call github,foss-for-synopsys-dwc-arc-processors,binutils-gdb,$(GDB_VERSION))
-GDB_SOURCE = gdb-$(GDB_VERSION).tar.gz
-GDB_FROM_GIT = y
-endif
-
 GDB_LICENSE = GPL-2.0+, LGPL-2.0+, GPL-3.0+, LGPL-3.0+
 GDB_LICENSE_FILES = COPYING COPYING.LIB COPYING3 COPYING3.LIB
 GDB_CPE_ID_VENDOR = gnu
@@ -30,9 +23,7 @@ GDB_PRE_CONFIGURE_HOOKS += GDB_CONFIGURE_SYMLINK
 # For the host variant, we really want to build with XML support,
 # which is needed to read XML descriptions of target architectures. We
 # also need ncurses.
-# As for libiberty, gdb may use a system-installed one if present, so
-# we must ensure ours is installed first.
-HOST_GDB_DEPENDENCIES = host-expat host-libiberty host-ncurses host-zlib
+HOST_GDB_DEPENDENCIES = host-expat host-readline host-zlib
 
 # Disable building documentation
 GDB_MAKE_OPTS += MAKEINFO=true
@@ -56,8 +47,8 @@ GDB_DEPENDENCIES += host-flex host-bison
 HOST_GDB_DEPENDENCIES += host-flex host-bison
 endif
 
-# All newer versions of GDB need host-gmp
-HOST_GDB_DEPENDENCIES += host-gmp
+# All newer versions of GDB need host-gmp and host-mpfr
+HOST_GDB_DEPENDENCIES += host-gmp host-mpfr
 
 # When gdb sources are fetched from the binutils-gdb repository, they
 # also contain the binutils sources, but binutils shouldn't be built,
@@ -118,6 +109,14 @@ GDB_MAKE_ENV += \
 GDB_CONF_ENV += gdb_cv_prfpregset_t_broken=no
 GDB_MAKE_ENV += gdb_cv_prfpregset_t_broken=no
 
+GDB_LDFLAGS = $(TARGET_LDFLAGS)
+# Uses __atomic_compare_exchange_1
+ifeq ($(BR2_TOOLCHAIN_HAS_LIBATOMIC),y)
+GDB_LDFLAGS += -latomic
+endif
+GDB_CONF_ENV += \
+	LDFLAGS="$(GDB_LDFLAGS)"
+
 # We want the built-in libraries of gdb (libbfd, libopcodes) to be
 # built and linked statically, as we do not install them on the
 # target, to not clash with the ones potentially installed by
@@ -138,9 +137,10 @@ ifeq ($(BR2_PACKAGE_GDB_DEBUGGER),y)
 GDB_DEPENDENCIES += zlib
 GDB_CONF_OPTS += \
 	--enable-gdb \
+	--with-system-readline \
 	--with-curses \
 	--with-system-zlib
-GDB_DEPENDENCIES += ncurses \
+GDB_DEPENDENCIES += readline \
 	$(if $(BR2_PACKAGE_LIBICONV),libiconv)
 else
 # When only building gdbserver, we don't need zlib. But we have no way to
@@ -162,11 +162,8 @@ GDB_CONF_OPTS += \
 GDB_DEPENDENCIES += gmp
 endif
 
-# Starting from GDB 14.x, mpfr is needed as a dependency to build full
-# gdb.
-# GDB fork from ARC GNU tools 2023.09 is based on GDB14 branch and so
-# requires MPFR as well.
-ifeq ($(BR2_GDB_VERSION_14)$(BR2_arc):$(BR2_PACKAGE_GDB_DEBUGGER),y:y)
+# mpfr is needed as a dependency to build full gdb
+ifeq ($(BR2_PACKAGE_GDB_DEBUGGER),y)
 GDB_DEPENDENCIES += mpfr
 GDB_CONF_OPTS += --with-mpfr=$(STAGING_DIR)
 else
@@ -174,8 +171,12 @@ GDB_CONF_OPTS += --without-mpfr
 endif
 
 ifeq ($(BR2_PACKAGE_GDB_SERVER),y)
-GDB_CONF_OPTS += --enable-gdbserver
-GDB_DEPENDENCIES += $(TARGET_NLS_DEPENDENCIES)
+GDB_CONF_OPTS += \
+	--enable-gdbserver \
+	--with-system-readline
+GDB_DEPENDENCIES += \
+	$(TARGET_NLS_DEPENDENCIES) \
+	readline
 else
 GDB_CONF_OPTS += --disable-gdbserver
 endif
@@ -192,6 +193,7 @@ GDB_CONF_OPTS += --disable-inprocess-agent
 endif
 
 ifeq ($(BR2_PACKAGE_GDB_TUI),y)
+GDB_DEPENDENCIES += ncurses
 GDB_CONF_OPTS += --enable-tui
 else
 GDB_CONF_OPTS += --disable-tui
@@ -213,6 +215,14 @@ GDB_CONF_OPTS += --with-libexpat-prefix=$(STAGING_DIR)/usr
 GDB_DEPENDENCIES += expat
 else
 GDB_CONF_OPTS += --without-expat
+endif
+
+ifeq ($(BR2_PACKAGE_XXHASH),y)
+GDB_CONF_OPTS += --with-xxhash
+GDB_CONF_OPTS += --with-xxhash-prefix=$(STAGING_DIR)/usr
+GDB_DEPENDENCIES += xxhash
+else
+GDB_CONF_OPTS += --without-xxhash
 endif
 
 ifeq ($(BR2_PACKAGE_XZ),y)
@@ -267,19 +277,12 @@ HOST_GDB_CONF_OPTS = \
 	--with-system-zlib \
 	--with-curses \
 	--disable-source-highlight \
-	$(GDB_DISABLE_BINUTILS_CONF_OPTS)
-
-# GDB newer than 14.x need host-mpfr
-# GDB fork from ARC GNU tools 2023.09 is based on GDB14 branch and so
-# requires MPFR as well.
-ifeq ($(BR2_GDB_VERSION_14)$(BR2_arc),y)
-HOST_GDB_DEPENDENCIES += host-mpfr
-HOST_GDB_CONF_OPTS += --with-mpfr=$(HOST_DIR)
-else
-HOST_GDB_CONF_OPTS += --without-mpfr
-endif
+	--with-system-readline \
+	$(GDB_DISABLE_BINUTILS_CONF_OPTS) \
+	--with-mpfr=$(HOST_DIR)
 
 ifeq ($(BR2_PACKAGE_HOST_GDB_TUI),y)
+HOST_GDB_DEPENDENCIES += host-ncurses
 HOST_GDB_CONF_OPTS += --enable-tui
 else
 HOST_GDB_CONF_OPTS += --disable-tui
@@ -296,6 +299,22 @@ ifeq ($(BR2_PACKAGE_HOST_GDB_SIM),y)
 HOST_GDB_CONF_OPTS += --enable-sim
 else
 HOST_GDB_CONF_OPTS += --disable-sim
+endif
+
+ifeq ($(BR2_PACKAGE_HOST_GDB_LZMA),y)
+HOST_GDB_CONF_OPTS += --with-lzma
+HOST_GDB_CONF_OPTS += --with-liblzma-prefix=$(HOST_DIR)
+HOST_GDB_DEPENDENCIES += host-xz
+else
+HOST_GDB_CONF_OPTS += --without-lzma
+endif
+
+ifeq ($(BR2_PACKAGE_HOST_GDB_XXHASH),y)
+HOST_GDB_CONF_OPTS += --with-xxhash
+HOST_GDB_CONF_OPTS += --with-xxhash-prefix=$(HOST_DIR)
+HOST_GDB_DEPENDENCIES += host-xxhash
+else
+HOST_GDB_CONF_OPTS += --without-xxhash
 endif
 
 # Since gdb 9, in-tree builds for GDB are not allowed anymore,

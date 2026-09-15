@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-SAMBA4_VERSION = 4.19.6
+SAMBA4_VERSION = 4.24.7
 SAMBA4_SITE = https://download.samba.org/pub/samba/stable
 SAMBA4_SOURCE = samba-$(SAMBA4_VERSION).tar.gz
 SAMBA4_INSTALL_STAGING = YES
@@ -22,6 +22,7 @@ SAMBA4_DEPENDENCIES = \
 	$(if $(BR2_PACKAGE_LIBCAP),libcap) \
 	$(if $(BR2_PACKAGE_LIBGLIB2),libglib2) \
 	$(if $(BR2_PACKAGE_READLINE),readline) \
+	$(if $(BR2_PACKAGE_LIBXCRYPT),libxcrypt) \
 	$(TARGET_NLS_DEPENDENCIES)
 SAMBA4_CFLAGS = $(TARGET_CFLAGS)
 SAMBA4_LDFLAGS = $(TARGET_LDFLAGS) $(TARGET_NLS_LIBS)
@@ -30,6 +31,11 @@ SAMBA4_CONF_ENV = \
 	LDFLAGS="$(SAMBA4_LDFLAGS)" \
 	XSLTPROC=false \
 	WAF_NO_PREFORK=1
+
+# m68k needs 32-bit offsets in switch tables to build
+ifeq ($(BR2_m68k),y)
+SAMBA4_CFLAGS += -mlong-jump-table-offsets
+endif
 
 SAMBA4_PYTHON = PYTHON="$(HOST_DIR)/bin/python3"
 ifeq ($(BR2_PACKAGE_PYTHON3),y)
@@ -77,13 +83,6 @@ SAMBA4_CONF_OPTS += --enable-avahi
 SAMBA4_DEPENDENCIES += avahi
 else
 SAMBA4_CONF_OPTS += --disable-avahi
-endif
-
-ifeq ($(BR2_PACKAGE_GAMIN),y)
-SAMBA4_CONF_OPTS += --with-fam
-SAMBA4_DEPENDENCIES += gamin
-else
-SAMBA4_CONF_OPTS += --without-fam
 endif
 
 ifeq ($(BR2_PACKAGE_LIBARCHIVE),y)
@@ -139,6 +138,7 @@ define SAMBA4_CONFIGURE_CMDS
 			--disable-rpath \
 			--disable-rpath-install \
 			--disable-iprint \
+			--without-fam \
 			--without-pam \
 			--without-dmapi \
 			--without-gpgme \

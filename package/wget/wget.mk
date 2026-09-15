@@ -4,13 +4,27 @@
 #
 ################################################################################
 
-WGET_VERSION = 1.21.4
+WGET_VERSION = 1.25.0
 WGET_SOURCE = wget-$(WGET_VERSION).tar.lz
 WGET_SITE = $(BR2_GNU_MIRROR)/wget
 WGET_DEPENDENCIES = host-pkgconf
 WGET_LICENSE = GPL-3.0+
 WGET_LICENSE_FILES = COPYING
 WGET_CPE_ID_VENDOR = gnu
+
+# 0002-src-metalink.c-clean_metalink_string-Fix-buffer-underflow.patch
+# 0003-src-metalink.c-clean_metalink_string-Fix-inverted-trailing-space-check.patch
+# 0004-src-metalink.c-Include-ctype.h.patch
+WGET_IGNORE_CVES += CVE-2026-58469
+
+# 0005-src-http.c-parse_content_range-Fix-integer-overflow.patch
+# 0006-src-http.c-parse_content_range-Use-strtoll-instead-of-strtol.patch
+WGET_IGNORE_CVES += CVE-2026-58470
+
+# 0007-src-url.c-convert_fname-Fix-buffer-overflow.patch
+WGET_IGNORE_CVES += CVE-2026-58471
+
+WGET_CONF_OPTS += --disable-pcre
 
 ifeq ($(BR2_PACKAGE_LIBPSL),y)
 WGET_CONF_OPTS += --with-libpsl
@@ -63,13 +77,10 @@ WGET_CONF_OPTS += --without-cares
 endif
 
 ifeq ($(BR2_PACKAGE_PCRE2),y)
-WGET_CONF_OPTS += --disable-pcre --enable-pcre2
+WGET_CONF_OPTS += --enable-pcre2
 WGET_DEPENDENCIES += pcre2
-else ifeq ($(BR2_PACKAGE_PCRE),y)
-WGET_CONF_OPTS += --enable-pcre --disable-pcre2
-WGET_DEPENDENCIES += pcre
 else
-WGET_CONF_OPTS += --disable-pcre --disable-pcre2
+WGET_CONF_OPTS +=  --disable-pcre2
 endif
 
 $(eval $(autotools-package))

@@ -1,5 +1,8 @@
+# From:
+# https://dl.winehq.org/wine/source/11.0/sha512sums.asc
+sha512  a2c3db14f8cf0d19927466805c8f17c68ee7e93d1196d1162dd2279af497c21ec611a63f7a9de59953bbdfdb44c87d7bf55373c6533224a5d54e434c29428d1b  wine-11.0.tar.xz
 # Locally calculated after checking pgp signature
-sha256  6ec8fb6f2c72d576cb11f52b2f8d59af64404802154651d122b98466d91dc847  wine-8.0.2.tar.xz
+sha256  c07a6857933c1fc60dff5448d79f39c92481c1e9db5aa628db9d0358446e0701  wine-11.0.tar.xz
 # Locally calculated
 sha256  e237fa56668030e928551ddd60f05df5fe957f75eab874bbd017e085ed722e7c  COPYING.LIB
-sha256  793d045546467c8f49e35fbd6e02859e57e78f8bb53571e8200bffd0e966dfa8  LICENSE
+sha256  ae025f125a5d639f0f7abe5146efa1e3d7453cc10b744b2910806fa3f46626ef  LICENSE

@@ -102,6 +102,7 @@ define $(2)_CONFIGURE_CMDS
 	cd $$($$(PKG)_BUILDDIR) && \
 	rm -f CMakeCache.txt && \
 	PATH=$$(BR_PATH) \
+	$$(if $$(BR2_INSTALL_LIBSTDCPP),,CXX=/bin/false) \
 	$$($$(PKG)_CONF_ENV) $$(BR2_CMAKE) $$($$(PKG)_SRCDIR) \
 		-G$$($$(PKG)_GENERATOR) \
 		-DCMAKE_MAKE_PROGRAM="$$($$(PKG)_GENERATOR_PROGRAM)" \
@@ -147,7 +148,6 @@ define $(2)_CONFIGURE_CMDS
 		-DCMAKE_CXX_FLAGS="$$(HOST_CXXFLAGS)" \
 		-DCMAKE_EXE_LINKER_FLAGS="$$(HOST_LDFLAGS)" \
 		-DCMAKE_SHARED_LINKER_FLAGS="$$(HOST_LDFLAGS)" \
-		-DCMAKE_ASM_COMPILER="$$(HOSTAS)" \
 		-DCMAKE_C_COMPILER="$$(CMAKE_HOST_C_COMPILER)" \
 		-DCMAKE_CXX_COMPILER="$$(CMAKE_HOST_CXX_COMPILER)" \
 		$(if $$(CMAKE_HOST_C_COMPILER_LAUNCHER),\
@@ -287,6 +287,8 @@ define TOOLCHAIN_CMAKE_INSTALL_FILES
 		> $(HOST_DIR)/share/buildroot/toolchainfile.cmake
 	$(Q)$(INSTALL) -D -m 0644 support/misc/Buildroot.cmake \
 		$(HOST_DIR)/share/buildroot/Platform/Buildroot.cmake
+	$(Q)$(INSTALL) -D -m 0644 support/misc/Buildroot-Initialize.cmake \
+		$(HOST_DIR)/share/buildroot/Platform/Buildroot-Initialize.cmake
 endef
 
 TOOLCHAIN_POST_INSTALL_STAGING_HOOKS += TOOLCHAIN_CMAKE_INSTALL_FILES
